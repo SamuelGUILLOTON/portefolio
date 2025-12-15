@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "three": "^0.182.0",
+    "vite": "^7.3.0"
+  },
+  "name": "portefolio",
+  "version": "1.0.0",
+  "main": "main.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
