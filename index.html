@@ -1,30 +1,135 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>My first three.js app</title>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>liminal joy</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <style>
-      body { margin: 0; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+        }
+
+        .item {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr); /* 3 colonnes égales */
+          gap: 20px; /* espace entre les cases */
+          justify-content: center; /* centre la grille si elle est plus petite que le conteneur */
+          padding: 20px 20px 80px 20px;
+          width: 80%;
+          margin-left: auto;
+          margin-right: auto;
+      }
+
+      .image-box {
+          width: 100%;
+          aspect-ratio: 1;
+          background-image: url("images/sansprojection.png");
+          background-size: cover;
+          background-position: center;
+          transition: opacity 0.4s ease;
+          cursor: pointer;
+          position: relative;
+           opacity: 0;
+            transform: translateY(50px); /* légèrement décalé vers le bas */
+            transition: opacity 0.8s ease, transform 0.8s ease;
+      }
+
+      .image-box.visible {
+          opacity: 1;
+          transform: translateY(0); /* revient à sa position normale */
+      }
+
+      .info {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        padding: 14px 12px;
+
+          background: linear-gradient(
+          to top,
+          rgba(0,0,0,0.95),
+          rgba(0,0,0,0.4),
+          transparent
+        );
+
+        color: white;
+        font-size: 20px;
+        line-height: 1.3;
+        font-family: sans-serif;
+
+        opacity: 0;
+        transform: translateY(12px);
+        
+        transition:
+          opacity 0.35s ease,
+          transform 0.35s ease;
+
+        pointer-events: none;
+        display: flex;
+        justify-content: space-between;
+      }
+
+
+      .image-box:hover .info {
+  opacity: 1;
+  transform: translateY(0);
+}
     </style>
-  </head>
-  <body>
-    <script type="module" src="/main.js"></script>
-     <div id="canvas-container">
-        <canvas id="cutting-mat"></canvas>
+</head>
+<body>
+  <main id="app"></main>
+  <div> 
+    <h2> 
+      real shooter editor
+      art direction
+      ryhthm & breathing
+    </h2>
+  </div>
+
+  <div class="item" id="gridContainer"></div>
+
+  <div id="videoModal" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+">
+    <div style="position: relative; width: 80%; max-width: 900px;">
+        <iframe id="youtubeVideo" width="100%" height="500" 
+            src="" 
+            title="YouTube video" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allowfullscreen>
+        </iframe>
+        <button id="closeModal" style="
+            position: absolute;
+            top: -30px;
+            right: 0;
+            background: red;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+        ">X</button>
     </div>
-    <div class="content">
-        <div class="element">
-            <h2>Élément 1</h2>
-            <p>Faites défiler vers le bas pour voir le tapis s'étendre automatiquement...</p>
-        </div>
-        <div class="element">
-            <h2>Élément 2</h2>
-            <p>Le tapis de découpe est en vectoriel, donc aucune pixellisation.</p>
-        </div>
-        <div class="element">
-            <h2>Élément 3</h2>
-            <p>Ajoutez autant d'éléments que vous voulez, le tapis suivra.</p>
-        </div>
-    </div>
-  </body>
+</div>
+
+
+
+  <script src="main.js"></script>
+  <script src="sketch.js"></script>
+</body>
 </html>

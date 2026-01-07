@@ -6,7 +6,9 @@
   "name": "portefolio",
   "version": "1.0.0",
   "main": "main.js",
-  "devDependencies": {},
+  "devDependencies": {
+    "less": "^4.5.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite",
