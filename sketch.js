@@ -73,28 +73,18 @@ function updateGrid() {
 
 function draw() {
   frameCounter++;
-  
-  // Sur mobile, skip frames pour améliorer performance
-  if (perf.isLowEnd && frameCounter % perf.updateInterval !== 0) {
-    return;
+
+  if (frameCounter % 4 === 0) {
+    updateFlowField(); // 15 fps pour le flow = largement suffisant
   }
-  
+
   background('#0f0f0f');
-  
-  // Calculer le flow field avec Perlin noise
-  updateFlowField();
-  
-  // Dessiner les particules de fond d'abord
   updateBackgroundParticles();
-  
-  // Mettre à jour et dessiner les particules
   updateParticles();
-  
-  // Incrémenter le temps pour l'animation
-  zoff += 0.005;
-  
   updateParasites();
+  zoff += 0.005;
 }
+
 
 function updateParasites() {
   noStroke();
