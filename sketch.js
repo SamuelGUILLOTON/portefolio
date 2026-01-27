@@ -43,6 +43,10 @@ function preload() {
 function setup() {
   const parent = document.getElementById('app');
   
+  const fixedHeight = isMobile
+  ? window.innerHeight
+  : window.innerHeight;
+
   let c = createCanvas(
     parent.offsetWidth,
     window.innerHeight
@@ -84,7 +88,6 @@ function draw() {
   updateParasites();
   zoff += 0.005;
 }
-
 
 function updateParasites() {
   noStroke();
@@ -566,18 +569,23 @@ function windowResized() {
   clearTimeout(resizeTimeout);
   resizeTimeout = setTimeout(() => {
     const parent = document.getElementById('app');
+
+    // ⚠️ IGNORER resize causé par le scroll mobile
+    if (window.innerWidth === lastWidth) return;
+
+    lastWidth = window.innerWidth;
+    lastHeight = window.innerHeight;
+
     resizeCanvas(parent.offsetWidth, window.innerHeight);
-    
+
     updateGrid();
-    
-    // Réinitialiser les points et particules
-    textPoints = [];
-    particles = [];
+
+    // Rebuild uniquement si vrai resize
     extractTextPoints();
     createParticles();
     createBackgroundParticles();
     createParasites();
-  }, 250);
+  }, 300);
 }
 
 // Throttled scroll handler
