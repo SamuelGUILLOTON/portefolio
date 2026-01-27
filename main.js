@@ -31,7 +31,7 @@ function closeModal() {
 // Fade in / out - Optimisé
 const fadeObserver = new IntersectionObserver(entries => {
   entries.forEach(entry => {
-    const delay = entry.target.dataset.index * 0.1;
+    const delay = isSingleColumn() ? 0 : entry.target.dataset.index * 0.1;
     
     if (entry.isIntersecting) {
       entry.target.style.transitionDelay = `${delay}s`;
@@ -42,8 +42,8 @@ const fadeObserver = new IntersectionObserver(entries => {
     }
   });
 }, { 
-  threshold: 0.3,
-  rootMargin: '50px' // Préchargement anticipé
+  threshold: isSingleColumn() ? 0.1 : 0.3,
+  rootMargin: '50px'
 });
 
 // Centre écran (mobile) - Optimisé
@@ -54,6 +54,9 @@ const centerObserver = new IntersectionObserver(entries => {
     const el = entry.target;
     
     if (entry.isIntersecting) {
+      // Toujours visible en mobile
+      el.classList.add('visible');
+      
       // Flouter toutes les autres vignettes
       document.querySelectorAll('.image-box').forEach(box => {
         if (box !== el) {
@@ -238,6 +241,11 @@ async function loadCSVAndGenerateThumbnails(csvUrl) {
     });
     
     container.appendChild(div);
+    
+    // En mobile, toutes les vignettes sont visibles dès le départ
+    if (isSingleColumn()) {
+      div.classList.add('visible');
+    }
     
     // Lazy load des images
     imageObserver.observe(div);
