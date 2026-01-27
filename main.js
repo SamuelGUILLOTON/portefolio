@@ -42,7 +42,7 @@ const fadeObserver = new IntersectionObserver(entries => {
     }
   });
 }, { 
-  threshold: isSingleColumn() ? 0.2 : 0.3,
+  threshold: isSingleColumn() ? 0.1 : 0.3,
   rootMargin: '50px'
 });
 
