@@ -43,10 +43,6 @@ function preload() {
 function setup() {
   const parent = document.getElementById('app');
   
-  const fixedHeight = isMobile
-  ? window.innerHeight
-  : window.innerHeight;
-
   let c = createCanvas(
     parent.offsetWidth,
     window.innerHeight
@@ -58,6 +54,10 @@ function setup() {
   scale = perf.flowFieldScale;
   cols = floor(width / scale);
   rows = floor(height / scale);
+  
+  // Stocker les dimensions initiales
+  lastWidth = width;
+  lastHeight = height;
   
   // Extraire les points du texte
   extractTextPoints();
@@ -77,16 +77,27 @@ function updateGrid() {
 
 function draw() {
   frameCounter++;
-
-  if (frameCounter % 4 === 0) {
-    updateFlowField(); // 15 fps pour le flow = largement suffisant
+  
+  // Sur mobile, skip frames pour améliorer performance
+  if (perf.isLowEnd && frameCounter % perf.updateInterval !== 0) {
+    return;
   }
-
+  
   background('#0f0f0f');
+  
+  // Calculer le flow field avec Perlin noise
+  updateFlowField();
+  
+  // Dessiner les particules de fond d'abord
   updateBackgroundParticles();
+  
+  // Mettre à jour et dessiner les particules
   updateParticles();
-  updateParasites();
+  
+  // Incrémenter le temps pour l'animation
   zoff += 0.005;
+  
+  updateParasites();
 }
 
 function updateParasites() {
@@ -187,7 +198,7 @@ function createParasites() {
       nx: random(1000),
       ny: random(1000),
       life: random(200, 800),
-      size: random(0.6, 2.4),
+      size: random(0.6, 2.4) * (perf.isLowEnd ? 0.6 : 1), // Plus petit sur mobile
       distToCenter: normalizedDist
     });
   }
@@ -222,7 +233,7 @@ function createBackgroundParticles() {
       maxSpeed: 1.5,
       maxForce: 0.2,
       distToCenter: normalizedDist,
-      size: random(0.8, 2),
+      size: random(0.8, 2) * (perf.isLowEnd ? 0.5 : 1), // Plus petit sur mobile
       baseAlpha: random(30, 80)
     });
   }
@@ -314,12 +325,13 @@ function extractTextPoints() {
   
   // Layout différent selon mobile/desktop
   if (isMobile || width < 768) {
-      const blockCenterY = height * 0.48;
-      const spacing = titleSize * 0.35;
-
-      pg.textSize(titleSize);
-      pg.text('LIMINAL', width / 2, blockCenterY - spacing);
-      pg.text('JOY',     width / 2, blockCenterY + spacing);
+    // MOBILE : LIMINAL au-dessus, JOY en dessous avec plus d'espace
+    // Pas de VISUAL BUILDER sur mobile
+    const spacing = titleSize * 0.7;
+    
+    pg.textSize(titleSize);
+    pg.text('LIMINAL', width / 2, height / 2 - spacing);
+    pg.text('JOY', width / 2, height / 2 + spacing);
   } else {
     // DESKTOP : LIMINAL JOY sur une ligne
     pg.textSize(titleSize);
@@ -543,13 +555,16 @@ function updateParticles() {
 function drawParticle(part, distance) {
   let alpha, size;
   
+  // Tailles réduites sur mobile
+  const sizeMultiplier = perf.isLowEnd ? 0.6 : 1;
+  
   if (part.type === 'title') {
     alpha = map(distance, 0, 120, 200, 80);
-    size = map(distance, 0, 120, 2.2, 1);
+    size = map(distance, 0, 120, 2.2, 1) * sizeMultiplier;
   } else {
     // SOUS-TITRE = lisibilité
     alpha = map(distance, 0, 80, 220, 140);
-    size = map(distance, 0, 80, 1.6, 1.2);
+    size = map(distance, 0, 80, 1.6, 1.2) * sizeMultiplier;
   }
   
   // Réduire l'alpha pour les particules loin du centre
@@ -563,29 +578,43 @@ function drawParticle(part, distance) {
   circle(part.pos.x, part.pos.y, size);
 }
 
-// Debounced resize
+// Debounced resize - protection contre les redémarrages intempestifs
 let resizeTimeout;
+let lastWidth = 0;
+let lastHeight = 0;
+
 function windowResized() {
+  const newWidth = windowWidth;
+  const newHeight = windowHeight;
+  
+  // Ignorer les micro-changements de taille (scroll sur mobile, barre d'adresse, etc)
+  if (Math.abs(newWidth - lastWidth) < 50 && Math.abs(newHeight - lastHeight) < 50) {
+    return; // Ne rien faire
+  }
+  
+  lastWidth = newWidth;
+  lastHeight = newHeight;
+  
   clearTimeout(resizeTimeout);
   resizeTimeout = setTimeout(() => {
     const parent = document.getElementById('app');
-
-    // ⚠️ IGNORER resize causé par le scroll mobile
-    if (window.innerWidth === lastWidth) return;
-
-    lastWidth = window.innerWidth;
-    lastHeight = window.innerHeight;
-
     resizeCanvas(parent.offsetWidth, window.innerHeight);
-
+    
     updateGrid();
-
-    // Rebuild uniquement si vrai resize
+    
+    // Réinitialiser les points et particules
+    textPoints = [];
+    particles = [];
+    backgroundParticles = [];
+    parasiteParticles = [];
+    
     extractTextPoints();
     createParticles();
     createBackgroundParticles();
     createParasites();
-  }, 300);
+    
+    console.log('Canvas resized:', newWidth, 'x', newHeight);
+  }, 250);
 }
 
 // Throttled scroll handler
