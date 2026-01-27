@@ -54,10 +54,27 @@ const centerObserver = new IntersectionObserver(entries => {
     const el = entry.target;
     
     if (entry.isIntersecting) {
+      // Flouter toutes les autres vignettes
+      document.querySelectorAll('.image-box').forEach(box => {
+        if (box !== el) {
+          box.classList.add('blur');
+          box.classList.remove('is-center');
+          
+          // Arrêter l'animation des autres vignettes
+          if (box._interval) {
+            clearInterval(box._interval);
+            box._interval = null;
+            if (box._images) {
+              box.style.backgroundImage = `url(${box._images[0]})`;
+            }
+          }
+        }
+      });
+      
       el.classList.add('is-center');
       el.classList.remove('blur');
       
-      // auto-hover image
+      // auto-hover image pour la vignette centrée uniquement
       if (!el._interval && el._images) {
         let i = 0;
         el._interval = setInterval(() => {
