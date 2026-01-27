@@ -42,7 +42,7 @@ const fadeObserver = new IntersectionObserver(entries => {
     }
   });
 }, { 
-  threshold: isSingleColumn() ? 0.1 : 0.3,
+  threshold: isSingleColumn() ? 0.2 : 0.3,
   rootMargin: '50px'
 });
 
@@ -54,9 +54,6 @@ const centerObserver = new IntersectionObserver(entries => {
     const el = entry.target;
     
     if (entry.isIntersecting) {
-      // Toujours visible en mobile
-      el.classList.add('visible');
-      
       // Flouter toutes les autres vignettes
       document.querySelectorAll('.image-box').forEach(box => {
         if (box !== el) {
@@ -241,11 +238,6 @@ async function loadCSVAndGenerateThumbnails(csvUrl) {
     });
     
     container.appendChild(div);
-    
-    // En mobile, toutes les vignettes sont visibles dès le départ
-    if (isSingleColumn()) {
-      div.classList.add('visible');
-    }
     
     // Lazy load des images
     imageObserver.observe(div);
