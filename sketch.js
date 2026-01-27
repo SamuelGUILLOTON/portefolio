@@ -17,7 +17,15 @@ function preload() {
 }
 
 function setup() {
-  let c = createCanvas(windowWidth, windowHeight); c.parent('app');
+  const parent = document.getElementById('app');
+
+    let c = createCanvas(
+    parent.offsetWidth,
+    window.innerHeight
+    );
+    c.parent(parent);
+
+    pixelDensity(Math.min(window.devicePixelRatio, 2));
   
   cols = floor(width / scale);
   rows = floor(height / scale);
@@ -29,10 +37,18 @@ function setup() {
   createParticles();
 
   createParasites();
+
+  updateGrid()
+}
+
+function updateGrid() {
+  cols = floor(width / scale);
+  rows = floor(height / scale);
+  flowField = new Array(cols * rows);
 }
 
 function draw() {
-  background(0);
+  background('#0f0f0f');
   
   // Calculer le flow field avec Perlin noise
   updateFlowField();
@@ -56,19 +72,35 @@ function updateParasites() {
     p.pos.x += dx * 0.6;
     p.pos.y += dy * 0.8;
 
+    // Ajout de la force de dispersion au scroll
+    if (scrollForce > 0) {
+      let angle = noise(
+        p.pos.x * 0.008,
+        p.pos.y * 0.008,
+        zoff + p.nx
+      ) * TWO_PI * 2;
+
+      let disperse = p5.Vector.fromAngle(angle);
+      disperse.mult(scrollForce * 2.5);
+      
+      p.pos.x += disperse.x;
+      p.pos.y += disperse.y;
+    }
+
     p.nx += 0.01;
     p.ny += 0.01;
     p.life--;
 
-    p.life -= scrollForce * scrollForce * 18;
-    p.pos.y -= scrollForce * random(0.5, 1.2);
+    // Réduction de vie beaucoup plus agressive au scroll
+    p.life -= scrollForce * scrollForce * 20;
+    p.pos.y -= scrollForce * random(1.5, 3.5);
 
     let alpha = map(p.life, 0, 200, 0, 80, true);
     fill(220, alpha);
     circle(p.pos.x, p.pos.y, p.size);
 
-    // régénération
-    if (p.life <= 0) {
+    // régénération (seulement si scroll faible)
+    if (p.life <= 0 && scrollForce < 0.5) {
       let pt = random(titlePoints);
       if (pt) {
         p.pos = pt.copy().add(
@@ -111,20 +143,25 @@ function extractTextPoints() {
 
   let pg = createGraphics(width, height);
   pg.pixelDensity(1);
-  pg.background(0);
-  pg.fill(255);
+  pg.background('#0f0f0f');
+  pg.fill('#e0e8ee');
   pg.noStroke();
   pg.textAlign(CENTER, CENTER);
   
 
-  // TITRE
-  //pg.textFont(font);
-  pg.textSize(120);
-  pg.text('LIMINAL JOY', width / 2, height / 2 - 30);
+  const titleSize = min(width * 0.12, 140);
+const subtitleSize = min(width * 0.035, 40);
 
-  // SOUS-TITRE (lisible)
-  pg.textSize(30);
-  pg.text("VISUAL BUILDER", width / 2, height / 2 + 60);
+pg.textSize(titleSize);
+pg.text('LIMINAL JOY', width / 2, height / 2 - titleSize * 0.25);
+
+pg.textSize(subtitleSize);
+pg.text(
+  "VISUAL BUILDER",
+  width / 2,
+  height / 2 + subtitleSize * 1.8
+);
+
 
   pg.loadPixels();
 
@@ -209,12 +246,17 @@ function updateFlowField() {
   }
 }
 
+
 function updateParticles() {
   for (let part of particles) {
     // Force d'attraction vers la cible (steering behavior)
     let toTarget = p5.Vector.sub(part.target, part.pos);
     let d = toTarget.mag();
-    let dispersion = scrollForce * scrollForce; // courbe douce
+    let dispersion = scrollForce * scrollForce;
+
+    // facteur de retour (scroll up)
+    let returnBoost = map(scrollForce, 0, 1.5, 2.5, 1, true);
+
     toTarget.normalize();
     
     // Ralentir en approchant de la cible
@@ -222,11 +264,11 @@ function updateParticles() {
       let m = map(d, 0, 100, 0, part.maxSpeed);
       toTarget.mult(m);
     } else {
-      toTarget.mult(part.maxSpeed * (1 - dispersion));
+      toTarget.mult(part.maxSpeed * returnBoost * (1 - dispersion));
     }
     
     let steer = p5.Vector.sub(toTarget, part.vel);
-    steer.limit(part.maxForce);
+    steer.limit(part.maxForce * returnBoost);
     part.acc.add(steer);
     
     // Ajouter l'influence du flow field
@@ -257,6 +299,16 @@ function updateParticles() {
     part.vel.add(part.acc);
     part.vel.limit(part.maxSpeed);
     part.pos.add(part.vel);
+
+    let maxDist = part.type === 'title' ? 240 : 140;
+    let offset = p5.Vector.sub(part.pos, part.target);
+
+    if (offset.mag() > maxDist) {
+    offset.setMag(maxDist);
+    part.pos = p5.Vector.add(part.target, offset);
+    part.vel.mult(0.4); // casser l'inertie
+    }
+
     part.acc.mult(0);
     
     // Dessiner la particule
@@ -283,6 +335,8 @@ function drawParticle(part, distance) {
 
 // Optionnel : redimensionner le canvas si la fenêtre change
 function windowResized() {
+
+    updateGrid()
   resizeCanvas(windowWidth, windowHeight);
   
   // Réinitialiser les points et particules

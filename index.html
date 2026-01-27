@@ -13,38 +13,53 @@
         }
         
         body {
-            background: #000000;
+            background: #0f0f0f;
+            color: #e0e8ee;
         }
+        #app {
+
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+      }
 
         .item {
           display: grid;
-          grid-template-columns: repeat(3, 1fr); /* 3 colonnes égales */
-          gap: 20px; /* espace entre les cases */
-          justify-content: center; /* centre la grille si elle est plus petite que le conteneur */
-          padding: 20px 20px 80px 20px;
-          width: 80%;
-          margin-left: auto;
-          margin-right: auto;
-      }
+          gap: clamp(12px, 2vw, 24px);
+          padding: clamp(16px, 4vw, 80px);
+          width: min(1800px, 100%);
+          grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
+          max-width: calc(3 * 522px);
+          margin: auto;
+        }
 
       .image-box {
-          width: 100%;
-          aspect-ratio: 1;
-          background-image: url("images/sansprojection.png");
-          background-size: cover;
-          background-position: center;
-          transition: opacity 0.4s ease;
-          cursor: pointer;
-          position: relative;
-           opacity: 0;
-            transform: translateY(50px); /* légèrement décalé vers le bas */
-            transition: opacity 0.8s ease, transform 0.8s ease;
+        width: 100%;
+        aspect-ratio: 1;
+        background-image: url("images/sansprojection.png");
+        background-size: cover;
+        background-position: center;
+        transition: opacity 0.4s ease;
+        cursor: pointer;
+        position: relative;
+        opacity: 0;
+        transform: translateY(50px); /* légèrement décalé vers le bas */
+        transition: opacity 0.8s ease, transform 0.8s ease;
+        margin: 35px auto 35px auto;
       }
+
+      .blur {
+        filter: blur(4px);
+         transition: filter 0.3s ease-in-out;
+      }
+
 
       .image-box.visible {
           opacity: 1;
           transform: translateY(0); /* revient à sa position normale */
+           transition: opacity 0.8s ease, transform 0.8s ease;
       }
+
 
       .info {
         position: absolute;
@@ -53,14 +68,14 @@
         width: 100%;
         padding: 14px 12px;
 
-          background: linear-gradient(
-          to top,
-          rgba(0,0,0,0.95),
-          rgba(0,0,0,0.4),
-          transparent
+        background: linear-gradient(
+        to top,
+        #0f0f0f,
+        rgba(0,0,0,0.4),
+        transparent
         );
 
-        color: white;
+        color: #e0e8ee;
         font-size: 20px;
         line-height: 1.3;
         font-family: sans-serif;
@@ -69,8 +84,8 @@
         transform: translateY(12px);
         
         transition:
-          opacity 0.35s ease,
-          transform 0.35s ease;
+        opacity 0.35s ease,
+        transform 0.35s ease;
 
         pointer-events: none;
         display: flex;
@@ -79,21 +94,137 @@
 
 
       .image-box:hover .info {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+
+    .list {
+      position: absolute;
+      color: #e0e8ee;
+      font-size: 10px;
+      top: 1142px;
+    }
+
+    footer {
+      color: #e0e8ee;
+      padding: clamp(16px, 4vw, 80px);
+      width: min(1800px, 100%);
+      margin: auto;
+      max-width: calc(3 * 522px);
+    }
+
+    a {
+      color: #e0e8ee;
+    }
+
+    .image-box.is-center .info {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .image-box.is-center {
+      /* optionnel : léger focus */
+      filter: brightness(1.05);
+    }
+
+    footer p {
+      margin: 5px 0;
+    }
+/* LEGAL MODAL */
+.legal-modal {
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(12px);
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.legal-modal h1 {
+    color: #e0e8ee;
+  max-width: 700px;
+  width: calc(100% - 40px);
+  padding: clamp(20px, 4vw, 40px);
+  font-family: sans-serif;
+}
+
+.legal-modal.active {
   opacity: 1;
+  pointer-events: auto;
+}
+
+.legal-content {
+  color: #e0e8ee;
+  max-width: 700px;
+  display: flex;
+  width: calc(100% - 40px);
+  padding: clamp(20px, 4vw, 40px);
+  border-radius: 12px;
+
+  font-family: sans-serif;
+  line-height: 1.6;
+
+  transform: translateY(20px);
+  transition: transform 0.35s ease;
+}
+
+.legal-modal.active .legal-content {
   transform: translateY(0);
 }
+
+.legal-content h2 {
+  margin-bottom: 20px;
+  font-size: clamp(20px, 4vw, 28px);
+}
+
+.legal-content p {
+  margin-bottom: 16px;
+  font-size: clamp(14px, 2.5vw, 16px);
+}
+
+.legal-content a {
+  color: #e0e8ee;
+  text-decoration: underline;
+}
+
+.legal-close {
+  position: absolute;
+  top: 11px;
+  right: 26px;
+  color: #e0e8ee;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 27px;
+  background: transparent;
+}
+
+.image-box iframe.preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.image-box.is-preview iframe.preview {
+  opacity: 1;
+}
+
+
     </style>
 </head>
 <body>
   <main id="app"></main>
-  <div> 
-    <h2> 
-      real shooter editor
-      art direction
-      ryhthm & breathing
-    </h2>
-  </div>
-
+  <div>
   <div class="item" id="gridContainer"></div>
 
   <div id="videoModal" style="
@@ -118,7 +249,7 @@
             top: -30px;
             right: 0;
             background: red;
-            color: white;
+            color: #e0e8ee;
             border: none;
             padding: 10px 15px;
             cursor: pointer;
@@ -128,6 +259,106 @@
 </div>
 
 
+<footer>
+<div>
+  <p>  <a href="mailto:liminal.joy@gmail.com" target=”_blank”> liminal.joy@gmail.com </a></p>
+
+  <p> <a href="https://www.instagram.com/_liminal.joy/" target=”_blank”> @_liminal.joy </a> </p>
+
+  <p style="cursor:pointer;">legal notice</p>
+</div>
+</footer>
+
+</div>
+
+
+<div id="legalModal" class="legal-modal">
+   <h1>Legal Notice</h1>
+   <button class="legal-close" style="
+            position: absolute;
+            top: 14px;
+            right: 26px;
+            color: #e0e8ee;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+        ">X</button>
+  <div class="legal-content">
+
+    <div>
+    <section>
+        <h2>Website publisher</h2>
+        <p>
+            Samuel <strong>GUILLOTON</strong><br>
+            Visual artist & freelance (auto-entrepreneur)<br>
+            Lille, France<br>
+            <a href="mailto:liminal.joy@gmail.com">liminal.joy@gmail.com</a>
+        </p>
+    </section>
+
+    <section>
+        <h2>Publication director</h2>
+        <p>Samuel <strong>GUILLOTON</strong></p>
+    </section>
+
+    <section>
+        <h2>Website hosting</h2>
+        <p>
+            <strong>Vercel Inc.</strong><br>
+            440 N Barranca Ave #4133<br>
+            Covina, CA 91723<br>
+            United States<br>
+            <a href="https://vercel.com" target="_blank" rel="noopener noreferrer">vercel.com</a>
+        </p>
+    </section>
+
+    <section>
+        <h2>Intellectual property</h2>
+        <p>
+            All content available on this website, including videos, images, animations,
+            text and code, is protected by intellectual property laws.
+        </p>
+        <p>
+            Unless otherwise stated, personal artworks are the exclusive property of
+            Samuel Guilloton. Some works are produced as commissioned projects and
+            remain subject to specific usage rights.
+        </p>
+        <p>
+            Any reproduction, distribution or reuse of the content, in whole or in part,
+            without prior written permission, is strictly prohibited.
+        </p>
+    </section>
+     </div>
+     <div>
+    <section>
+        <h2>Personal data & cookies</h2>
+        <p>
+            This website does not use tracking tools, analytics services or marketing cookies.
+        </p>
+        <p>
+            Embedded videos (such as Vimeo or YouTube) may set cookies managed directly
+            by their respective platforms. The publisher has no control over these cookies.
+        </p>
+        <p>
+            No personal data is collected through forms on this website.
+        </p>
+        <p>
+            For any questions related to personal data, you may contact:
+            <a href="mailto:liminal.joy@gmail.com">liminal.joy@gmail.com</a>
+        </p>
+    </section>
+
+    <section>
+        <h2>Applicable law</h2>
+        <p>
+            This website is governed by French law.
+            Any dispute relating to its use is subject to the jurisdiction of French courts.
+        </p>
+    </section>
+    </div>
+  </div>
+</div>
 
   <script src="main.js"></script>
   <script src="sketch.js"></script>
