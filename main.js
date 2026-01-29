@@ -5,10 +5,10 @@
 const CLOUD_NAME = "djfriy1fa";
 
 const cloudinaryPreview = (id) =>
-  `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto,f_auto,eo_6/${id}.mp4`;
+  `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto,f_auto,so_25/${id}.mp4`;
 
 const cloudinaryFull = (id) =>
-  `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto,f_auto,so_25/${id}.mp4`;
+  `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto,f_auto/${id}.mp4`;
 
 const cloudinaryThumbnail = (id, tc) =>
   `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto,f_auto,${tc}/${id}.jpg`;
