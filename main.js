@@ -5,25 +5,33 @@
 const CLOUD_NAME = "djfriy1fa";
 
 const cloudinaryPreview = (id) =>
-  `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto,f_auto,so_25/${id}.mp4`;
+  `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto,f_auto,eo_6/${id}.mp4`;
 
 const cloudinaryFull = (id) =>
-  `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto,f_auto/${id}.mp4`;
+  `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto,f_auto,so_25/${id}.mp4`;
 
-const cloudinaryThumbnail = (id, tc) =>
-  `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto,f_auto,${tc}/${id}.jpg`;
+const cloudinaryThumbnail = (tc, id) =>
+  `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto,f_auto,${tc || 1}/${id}.jpg`;
 
 /* =========================
    DOM
 ========================= */
 
 const modal = document.getElementById('videoModal');
-const iframe = document.getElementById('youtubeVideo'); // <video> dans le modal
+const iframe = document.getElementById('youtubeVideo');
 const closeBtn = document.getElementById('closeModal');
 const container = document.getElementById('gridContainer');
 
+/* =========================
+   DEVICE DETECTION
+========================= */
+
 const isTouch = window.matchMedia('(hover: none)').matches;
 const isSingleColumn = () => window.innerWidth < 772;
+
+// Détection iOS spécifique
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
 /* =========================
    MODAL VIDEO
@@ -42,6 +50,46 @@ document.addEventListener('keydown', e => {
 function closeModal() {
   iframe.src = "";
   modal.style.display = "none";
+}
+
+/* =========================
+   VIDEO HELPERS (iOS)
+========================= */
+
+// Force le chargement des métadonnées vidéo sur iOS
+function preloadVideoForIOS(video) {
+  if (isIOS) {
+    video.load();
+  }
+}
+
+// Gestion améliorée de la lecture vidéo pour iOS
+function playVideoSafely(video) {
+  if (!video) return Promise.reject();
+  
+  // Sur iOS, s'assurer que la vidéo est prête
+  if (isIOS && video.readyState < 2) {
+    return new Promise((resolve, reject) => {
+      video.addEventListener('loadeddata', () => {
+        video.play().then(resolve).catch(reject);
+      }, { once: true });
+      video.load();
+    });
+  }
+  
+  return video.play().catch(() => {});
+}
+
+// Pause vidéo avec reset
+function stopVideo(video) {
+  if (!video) return;
+  video.pause();
+  video.currentTime = 0;
+  
+  // Sur iOS, libérer les ressources
+  if (isIOS) {
+    video.src = video.src; // Force le reset
+  }
 }
 
 /* =========================
@@ -66,7 +114,7 @@ const fadeObserver = new IntersectionObserver(entries => {
   rootMargin: '50px'
 });
 
-// Centre écran mobile
+// Centre écran mobile (optimisé pour iOS)
 const centerObserver = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (!isSingleColumn()) return;
@@ -76,6 +124,7 @@ const centerObserver = new IntersectionObserver(entries => {
     const thumbnail = el.querySelector('.thumbnail-image');
 
     if (entry.isIntersecting) {
+      // Blur les autres éléments
       document.querySelectorAll('.image-box').forEach(box => {
         if (box !== el) {
           box.classList.add('blur');
@@ -83,8 +132,7 @@ const centerObserver = new IntersectionObserver(entries => {
           const t = box.querySelector('.thumbnail-image');
           if (v) {
             v.style.opacity = '0';
-            v.pause();
-            v.currentTime = 0;
+            stopVideo(v);
           }
           if (t) {
             t.style.opacity = '1';
@@ -95,11 +143,17 @@ const centerObserver = new IntersectionObserver(entries => {
       el.classList.add('is-center');
       el.classList.remove('blur');
 
-      // Show preview when centered on mobile
+      // Afficher la preview quand centré sur mobile
       if (thumbnail) thumbnail.style.opacity = '0';
       if (video) {
         video.style.opacity = '1';
-        video.play().catch(() => {});
+        
+        // Sur iOS, utiliser la fonction améliorée
+        if (isIOS) {
+          playVideoSafely(video);
+        } else {
+          video.play().catch(() => {});
+        }
       }
     } else {
       el.classList.remove('is-center');
@@ -107,8 +161,7 @@ const centerObserver = new IntersectionObserver(entries => {
 
       if (video) {
         video.style.opacity = '0';
-        video.pause();
-        video.currentTime = 0;
+        stopVideo(video);
       }
       if (thumbnail) {
         thumbnail.style.opacity = '1';
@@ -134,7 +187,7 @@ function generateThumbnailsFromCloudinary(videos) {
     /* ===== THUMBNAIL IMAGE ===== */
     const thumbnail = document.createElement('img');
     thumbnail.className = 'thumbnail-image';
-    thumbnail.src = cloudinaryThumbnail(videoData.public_id, videoData.timecode);
+    thumbnail.src = cloudinaryThumbnail(videoData.timecode, videoData.public_id);
     thumbnail.alt = `${videoData.title} - ${videoData.artist}`;
     thumbnail.style.cssText = 'position: absolute; width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s ease;';
     div.appendChild(thumbnail);
@@ -147,8 +200,14 @@ function generateThumbnailsFromCloudinary(videos) {
     video.loop = true;
     video.playsInline = true;
     video.preload = 'none';
+    
+    // Attributs supplémentaires pour iOS
+    if (isIOS) {
+      video.setAttribute('webkit-playsinline', 'true');
+      video.setAttribute('x-webkit-airplay', 'deny');
+    }
+    
     video.style.cssText = 'opacity: 0; transition: opacity 0.3s ease;';
-
     div.appendChild(video);
 
     /* ===== INFO ===== */
@@ -169,7 +228,6 @@ function generateThumbnailsFromCloudinary(videos) {
       div.addEventListener('mouseenter', () => {
         clearTimeout(blurTimeout);
         
-        // Hide thumbnail and show video on hover
         thumbnail.style.opacity = '0';
         video.style.opacity = '1';
         video.play().catch(() => {});
@@ -184,11 +242,9 @@ function generateThumbnailsFromCloudinary(videos) {
       div.addEventListener('mouseleave', () => {
         clearTimeout(blurTimeout);
         
-        // Show thumbnail and hide video when leaving hover
         thumbnail.style.opacity = '1';
         video.style.opacity = '0';
-        video.pause();
-        video.currentTime = 0;
+        stopVideo(video);
         
         document
           .querySelectorAll('.image-box')
@@ -198,34 +254,70 @@ function generateThumbnailsFromCloudinary(videos) {
 
     /* ===== MOBILE TOUCH HANDLING ===== */
     let isPreviewPlaying = false;
+    let tapTimeout = null;
 
     /* ===== CLICK → PREVIEW (mobile) or MODAL (desktop) ===== */
     div.addEventListener('click', (e) => {
-      // Desktop: open modal directly
+      // Desktop: ouvrir le modal directement
       if (!isTouch) {
         iframe.src = cloudinaryFull(videoData.public_id);
         modal.style.display = "flex";
         return;
       }
 
-      // Mobile: first tap = preview, second tap = modal
+      // Mobile: premier tap = preview, second tap = modal
       if (!isPreviewPlaying) {
         e.stopPropagation();
         thumbnail.style.opacity = '0';
         video.style.opacity = '1';
-        video.play().catch(() => {});
+        
+        // Utiliser la fonction optimisée pour iOS
+        if (isIOS) {
+          playVideoSafely(video);
+        } else {
+          video.play().catch(() => {});
+        }
+        
         isPreviewPlaying = true;
+        
+        // Sur iOS, reset automatique après 10 secondes si pas de second tap
+        if (isIOS) {
+          clearTimeout(tapTimeout);
+          tapTimeout = setTimeout(() => {
+            if (isPreviewPlaying) {
+              thumbnail.style.opacity = '1';
+              video.style.opacity = '0';
+              stopVideo(video);
+              isPreviewPlaying = false;
+            }
+          }, 10000);
+        }
       } else {
+        clearTimeout(tapTimeout);
         iframe.src = cloudinaryFull(videoData.public_id);
         modal.style.display = "flex";
+        
         // Reset preview state
         thumbnail.style.opacity = '1';
         video.style.opacity = '0';
-        video.pause();
-        video.currentTime = 0;
+        stopVideo(video);
         isPreviewPlaying = false;
       }
     });
+
+    // Sur iOS, précharger les métadonnées au scroll
+    if (isIOS) {
+      const loadObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            preloadVideoForIOS(video);
+            loadObserver.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: '200px' });
+      
+      loadObserver.observe(div);
+    }
 
     container.appendChild(div);
 
@@ -260,6 +352,39 @@ window.addEventListener("keydown", (e) => {
     legalModal.classList.remove("active");
   }
 });
+
+/* =========================
+   iOS SPECIFIC FIXES
+========================= */
+
+// Empêcher le bounce scroll sur iOS si nécessaire
+if (isIOS) {
+  let lastY = 0;
+  
+  document.addEventListener('touchmove', (e) => {
+    const scrollable = e.target.closest('.scrollable, #gridContainer, #legalModal');
+    if (!scrollable) return;
+    
+    const currentY = e.touches[0].clientY;
+    const scrollTop = scrollable.scrollTop;
+    const scrollHeight = scrollable.scrollHeight;
+    const clientHeight = scrollable.clientHeight;
+    
+    if ((scrollTop <= 0 && currentY > lastY) || 
+        (scrollTop + clientHeight >= scrollHeight && currentY < lastY)) {
+      e.preventDefault();
+    }
+    
+    lastY = currentY;
+  }, { passive: false });
+  
+  // Fix pour l'orientation change sur iOS
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 100);
+  });
+}
 
 /* =========================
    INIT (JSON)
