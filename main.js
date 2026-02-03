@@ -256,7 +256,7 @@ function generateThumbnailsFromCloudinary(videos) {
     let isPreviewPlaying = false;
     let tapTimeout = null;
 
-    /* ===== CLICK → PREVIEW (mobile) or MODAL (desktop) ===== */
+    /* ===== CLICK → PREVIEW (mobile) or MODAL (desktop)
     div.addEventListener('click', (e) => {
       // Desktop: ouvrir le modal directement
       if (!isTouch) {
@@ -304,7 +304,23 @@ function generateThumbnailsFromCloudinary(videos) {
         isPreviewPlaying = false;
       }
     });
+ ===== */
 
+    /* ===== CLICK → MODAL ===== */
+    div.addEventListener('click', () => {
+      // Ouvrir le modal avec la vidéo complète
+      iframe.src = cloudinaryFull(videoData.public_id);
+      modal.style.display = "flex";
+      
+      // Nettoyer la preview si elle tourne
+      if (video.readyState > 0) {
+        thumbnail.style.opacity = '1';
+        video.style.opacity = '0';
+        stopVideo(video);
+      }
+    });
+
+    
     // Sur iOS, précharger les métadonnées au scroll
     if (isIOS) {
       const loadObserver = new IntersectionObserver(entries => {
@@ -358,27 +374,17 @@ window.addEventListener("keydown", (e) => {
 ========================= */
 
 // Empêcher le bounce scroll sur iOS si nécessaire
+/* NOUVELLE VERSION - Plus permissive */
 if (isIOS) {
-  let lastY = 0;
-  
-  document.addEventListener('touchmove', (e) => {
-    const scrollable = e.target.closest('.scrollable, #gridContainer, #legalModal');
-    if (!scrollable) return;
-    
-    const currentY = e.touches[0].clientY;
-    const scrollTop = scrollable.scrollTop;
-    const scrollHeight = scrollable.scrollHeight;
-    const clientHeight = scrollable.clientHeight;
-    
-    if ((scrollTop <= 0 && currentY > lastY) || 
-        (scrollTop + clientHeight >= scrollHeight && currentY < lastY)) {
+  // Uniquement empêcher le bounce sur le body, pas sur le contenu
+  document.body.addEventListener('touchmove', (e) => {
+    // Ne bloquer QUE si on touche directement le body
+    if (e.target === document.body) {
       e.preventDefault();
     }
-    
-    lastY = currentY;
   }, { passive: false });
   
-  // Fix pour l'orientation change sur iOS
+  // Fix orientation
   window.addEventListener('orientationchange', () => {
     setTimeout(() => {
       window.scrollTo(0, 0);
