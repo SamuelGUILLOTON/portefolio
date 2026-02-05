@@ -10,10 +10,12 @@ let titlePoints = [];
 let subtitlePoints = [];
 let parasiteParticles = [];
 let scrollForce = 0;
+let lastScrollForce = 0; // Pour détecter la direction du scroll
 
 let font;
 let isMobile = false;
 let performanceMode = 'auto'; // 'auto', 'low', 'high'
+
 
 // Détection mobile/performance
 function detectPerformance() {
@@ -37,7 +39,7 @@ const perf = detectPerformance();
 let frameCounter = 0;
 
 function preload() {
-  font = loadFont('fonts/BOONE.otf');
+  // Option sans preload - utilise une police système
 }
 
 function setup() {
@@ -45,11 +47,14 @@ function setup() {
   
   let c = createCanvas(
     parent.offsetWidth,
-    window.innerHeight
+    parent.offsetHeight
   );
   c.parent(parent);
   
   pixelDensity(perf.pixelDensity);
+  
+  // Police par défaut
+  textFont('Playfair Display, Georgia, serif');
   
   scale = perf.flowFieldScale;
   cols = floor(width / scale);
@@ -98,6 +103,9 @@ function draw() {
   zoff += 0.005;
   
   updateParasites();
+  
+  // Stocker la force de scroll pour la prochaine frame
+  lastScrollForce = scrollForce;
 }
 
 function updateParasites() {
@@ -168,17 +176,27 @@ function createParasites() {
   parasiteParticles = [];
   
   let sourcePoints = titlePoints.concat(subtitlePoints);
-  const centerX = width / 2;
-  const centerY = height / 2;
+  
+  // Calculer le centre de la zone du texte (en haut)
+  let textCenterY = 0;
+  let textCenterX = width / 2;
+  
+  if (titlePoints.length > 0) {
+    let sumY = 0;
+    for (let pt of titlePoints) {
+      sumY += pt.y;
+    }
+    textCenterY = sumY / titlePoints.length;
+  }
   
   for (let i = 0; i < perf.particleCount.parasites; i++) {
     let pt = random(sourcePoints);
     if (!pt) continue;
     
-    // Même logique de concentration au centre
-    let distToCenter = dist(pt.x, pt.y, centerX, centerY);
-    let maxDist = dist(0, 0, width / 2, height / 2);
-    let normalizedDist = distToCenter / maxDist;
+    // Calculer distance au centre du texte
+    let distToCenter = dist(pt.x, pt.y, textCenterX, textCenterY);
+    let maxDist = width * 0.4;
+    let normalizedDist = constrain(distToCenter / maxDist, 0, 1);
     
     let keepProbability = map(normalizedDist, 0, 1, 1, 0.35);
     
@@ -198,7 +216,7 @@ function createParasites() {
       nx: random(1000),
       ny: random(1000),
       life: random(200, 800),
-      size: random(0.6, 2.4) * (perf.isLowEnd ? 0.6 : 1), // Plus petit sur mobile
+      size: random(0.6, 2.4) * (perf.isLowEnd ? 0.6 : 1),
       distToCenter: normalizedDist
     });
   }
@@ -209,32 +227,47 @@ function createParasites() {
 function createBackgroundParticles() {
   backgroundParticles = [];
   
+  // Centre de référence pour les particules de fond (zone du texte)
   const centerX = width / 2;
-  const centerY = height / 2;
+  const centerY = height * 0.15; // Zone du haut
   
-  // Nombre de particules de fond (moins que les particules de texte)
-  const numBackgroundParticles = perf.isLowEnd ? 400 : 800;
+  // BEAUCOUP plus de particules de fond pour un effet organique dense
+  const numBackgroundParticles = perf.isLowEnd ? 1200 : 2400;
   
   for (let i = 0; i < numBackgroundParticles; i++) {
-    // Position aléatoire sur tout l'écran
-    let x = random(width);
-    let y = random(height);
+    // Distribution organique : plus dense autour des lettres, moins dense loin
+    let angle = random(TWO_PI);
+    let radiusVariation = random(1);
+    
+    // Distribution en "anneaux" autour du centre avec variation organique
+    let baseRadius = pow(radiusVariation, 0.6) * min(width, height) * 0.5;
+    let noiseOffset = noise(i * 0.01, angle) * 150;
+    let radius = baseRadius + noiseOffset;
+    
+    let x = centerX + cos(angle) * radius;
+    let y = centerY + sin(angle) * radius * 0.6; // Compression verticale
     
     // Calculer distance au centre pour l'opacité
     let distToCenter = dist(x, y, centerX, centerY);
-    let maxDist = dist(0, 0, width / 2, height / 2);
-    let normalizedDist = distToCenter / maxDist;
+    let maxDist = width * 0.4;
+    let normalizedDist = constrain(distToCenter / maxDist, 0, 1);
+    
+    // Taille variable selon la distance (plus petit au centre)
+    let sizeMultiplier = map(normalizedDist, 0, 1, 0.7, 1.3);
     
     backgroundParticles.push({
       pos: createVector(x, y),
       vel: createVector(),
       acc: createVector(),
-      target: createVector(x, y), // Position fixe comme target
-      maxSpeed: 1.5,
-      maxForce: 0.2,
+      target: createVector(x, y), // Position originale comme target
+      originalPos: createVector(x, y), // Pour le réassemblage
+      maxSpeed: 1.8,
+      maxForce: 0.25,
       distToCenter: normalizedDist,
-      size: random(0.8, 2) * (perf.isLowEnd ? 0.5 : 1), // Plus petit sur mobile
-      baseAlpha: random(30, 80)
+      size: random(0.6, 1.8) * sizeMultiplier * (perf.isLowEnd ? 0.5 : 1),
+      baseAlpha: map(normalizedDist, 0, 1, 60, 30), // Plus visible au centre
+      floatOffset: random(1000),
+      dispersionLevel: 0 // Niveau de dispersion comme les particules principales
     });
   }
   
@@ -245,63 +278,124 @@ function updateBackgroundParticles() {
   noStroke();
   
   for (let part of backgroundParticles) {
-    // Skip particles hors écran
-    if (part.pos.x < -50 || part.pos.x > width + 50 || 
-        part.pos.y < -50 || part.pos.y > height + 50) {
-      continue;
+    // NE PLUS SKIP - on garde toutes les particules pour un fond dense
+    
+    // GESTION DU NIVEAU DE DISPERSION (synchronisé avec les lettres)
+    if (scrollForce > 0.2) {
+      part.dispersionLevel = min(1, part.dispersionLevel + 0.04);
+    } else if (scrollForce < 0.05) {
+      part.dispersionLevel = max(0, part.dispersionLevel - 0.015);
     }
     
-    // Légère attraction vers la position target
-    let toTarget = p5.Vector.sub(part.target, part.pos);
-    let d = toTarget.mag();
+    let dispersedWeight = part.dispersionLevel;
+    let assembledWeight = 1 - part.dispersionLevel;
     
-    toTarget.normalize();
-    
-    if (d < 50) {
-      let m = map(d, 0, 50, 0, part.maxSpeed);
-      toTarget.mult(m);
-    } else {
-      toTarget.mult(part.maxSpeed);
-    }
-    
-    let steer = p5.Vector.sub(toTarget, part.vel);
-    steer.limit(part.maxForce);
-    part.acc.add(steer);
-    
-    // Ajouter l'influence du flow field (plus subtile)
-    let x = floor(part.pos.x / scale);
-    let y = floor(part.pos.y / scale);
-    let index = constrain(x + y * cols, 0, flowField.length - 1);
-    
-    if (flowField[index]) {
-      let force = flowField[index].copy();
-      force.mult(0.15); // Plus subtil que les particules de texte
-      part.acc.add(force);
-    }
-    
-    // Effet de scroll
-    if (scrollForce > 0) {
-      let angle = noise(
-        part.pos.x * 0.01,
-        part.pos.y * 0.01,
-        zoff
-      ) * TWO_PI * 2;
+    // === MODE DISPERSÉ : Distribution organique sur tout l'écran ===
+    if (dispersedWeight > 0.1) {
+      // Flow field fort pour mouvement organique
+      let x = floor(part.pos.x / scale);
+      let y = floor(part.pos.y / scale);
+      let index = constrain(x + y * cols, 0, flowField.length - 1);
       
-      let disperse = p5.Vector.fromAngle(angle);
-      disperse.mult(scrollForce * 0.5);
+      if (flowField[index]) {
+        let force = flowField[index].copy();
+        force.mult(0.4 * dispersedWeight); // Plus fort que avant
+        part.acc.add(force);
+      }
       
-      part.acc.add(disperse);
+      // Mouvement brownien pour distribution organique
+      let brownian = createVector(
+        (noise(part.pos.x * 0.003 + part.floatOffset, zoff) - 0.5) * 0.8,
+        (noise(part.pos.y * 0.003 + part.floatOffset, zoff + 100) - 0.5) * 0.8
+      );
+      brownian.mult(dispersedWeight);
+      part.acc.add(brownian);
+      
+      // Force de dispersion au scroll actif
+      if (scrollForce > 0.2) {
+        let angle = noise(
+          part.pos.x * 0.008,
+          part.pos.y * 0.008,
+          zoff + part.floatOffset
+        ) * TWO_PI * 3;
+        
+        let disperse = p5.Vector.fromAngle(angle);
+        disperse.mult(scrollForce * 0.6 * dispersedWeight);
+        part.acc.add(disperse);
+      }
+      
+      // Légère répulsion depuis le centre pour mieux répartir
+      let fromCenter = createVector(part.pos.x - width / 2, part.pos.y - height * 0.15);
+      fromCenter.normalize();
+      fromCenter.mult(0.15 * dispersedWeight);
+      part.acc.add(fromCenter);
+      
+      // Attraction douce vers les bords de la zone visible (distribution uniforme)
+      let edgeForce = createVector(0, 0);
+      let margin = width * 0.1;
+      
+      if (part.pos.x < margin) {
+        edgeForce.x = map(part.pos.x, 0, margin, 0.2, 0);
+      } else if (part.pos.x > width - margin) {
+        edgeForce.x = map(part.pos.x, width - margin, width, 0, -0.2);
+      }
+      
+      if (part.pos.y < margin) {
+        edgeForce.y = map(part.pos.y, 0, margin, 0.2, 0);
+      } else if (part.pos.y > height - margin) {
+        edgeForce.y = map(part.pos.y, height - margin, height, 0, -0.2);
+      }
+      
+      edgeForce.mult(dispersedWeight);
+      part.acc.add(edgeForce);
+    }
+    
+    // === MODE ASSEMBLÉ : Retour vers position originale ===
+    if (assembledWeight > 0.1) {
+      let toTarget = p5.Vector.sub(part.originalPos, part.pos);
+      let d = toTarget.mag();
+      
+      toTarget.normalize();
+      
+      if (d < 50) {
+        let m = map(d, 0, 50, 0, part.maxSpeed);
+        toTarget.mult(m);
+      } else {
+        toTarget.mult(part.maxSpeed);
+      }
+      
+      let steer = p5.Vector.sub(toTarget, part.vel);
+      steer.limit(part.maxForce);
+      steer.mult(assembledWeight * 1.5);
+      part.acc.add(steer);
+      
+      // Flow field subtil en mode assemblé
+      let x = floor(part.pos.x / scale);
+      let y = floor(part.pos.y / scale);
+      let index = constrain(x + y * cols, 0, flowField.length - 1);
+      
+      if (flowField[index]) {
+        let force = flowField[index].copy();
+        force.mult(0.2 * assembledWeight);
+        part.acc.add(force);
+      }
     }
     
     // Appliquer la physique
     part.vel.add(part.acc);
-    part.vel.limit(part.maxSpeed);
+    
+    let maxVel = lerp(part.maxSpeed, 2.5, dispersedWeight);
+    part.vel.limit(maxVel);
+    
     part.pos.add(part.vel);
     part.acc.mult(0);
     
-    // Dessiner avec fade basé sur distance au centre
-    let centerFade = map(part.distToCenter, 0, 1, 1, 0.3);
-    let alpha = part.baseAlpha * centerFade;
+    // Dessiner avec alpha variable selon dispersion
+    let centerFade = map(part.distToCenter, 0, 1, 1, 0.5);
+    let baseAlpha = part.baseAlpha * centerFade;
+    
+    // Alpha augmente légèrement en mode dispersé (fond plus visible)
+    let alpha = lerp(baseAlpha, baseAlpha * 1.3, dispersedWeight * 0.5);
     
     fill(200, alpha);
     circle(part.pos.x, part.pos.y, part.size);
@@ -320,29 +414,25 @@ function extractTextPoints() {
   pg.noStroke();
   pg.textAlign(CENTER, CENTER);
   
-  const titleSize = min(width * 0.12, 140);
+  pg.textFont('Playfair Display, Georgia, serif');
+  
+  const titleSize = min(width * 0.7, 100);
   const subtitleSize = min(width * 0.035, 40);
   
+  // Position en haut du canvas avec marge
+  const topMargin = titleSize * 0.7; // Marge depuis le haut
+  
   // Layout différent selon mobile/desktop
-  if (isMobile || width < 768) {
-    // MOBILE : LIMINAL au-dessus, JOY en dessous avec plus d'espace
-    // Pas de VISUAL BUILDER sur mobile
-    const spacing = titleSize * 0.7;
+  if (!isMobile || !width < 768) {
+    const spacing = titleSize * 0.6;
     
     pg.textSize(titleSize);
-    pg.text('LIMINAL', width / 2, height / 2 - spacing);
-    pg.text('JOY', width / 2, height / 2 + spacing);
+    pg.text('LIMINAL', width / 2, topMargin);
+    pg.text('JOY', width / 2, topMargin + spacing);
   } else {
-    // DESKTOP : LIMINAL JOY sur une ligne
+    // DESKTOP : LIMINAL JOY sur une ligne en haut
     pg.textSize(titleSize);
-    pg.text('LIMINAL JOY', width / 2, height / 2 - titleSize * 0.25);
-    
-    pg.textSize(subtitleSize);
-    pg.text(
-      "VISUAL BUILDER",
-      width / 2,
-      height / 2 + subtitleSize * 1.8
-    );
+    pg.text('LIMINAL JOY', width / 2, topMargin);
   }
   
   pg.loadPixels();
@@ -356,47 +446,49 @@ function extractTextPoints() {
       let r = pg.pixels[idx];
       
       if (r > 220) {
-        // Déterminer à quel texte appartient le point
-        if (y < height / 2 + 10) {
-          titlePoints.push(createVector(x, y));
-        } else {
-          subtitlePoints.push(createVector(x, y));
-        }
+        // Tout va dans titlePoints puisqu'on n'a qu'un texte
+        titlePoints.push(createVector(x, y));
       }
     }
   }
   
   console.log(
     'Title:', titlePoints.length,
-    'Subtitle:', subtitlePoints.length,
     'Performance mode:', perf.isLowEnd ? 'LOW' : 'HIGH',
-    'Layout:', isMobile ? 'MOBILE (stacked)' : 'DESKTOP (inline)'
+    'Layout:', isMobile ? 'MOBILE (stacked)' : 'DESKTOP (inline)',
+    'Position: TOP'
   );
 }
 
 function createParticles() {
   particles = [];
   
-  const centerX = width / 2;
-  const centerY = height / 2;
+  // Calculer le centre de la zone du texte
+  let textCenterX = width / 2;
+  let textCenterY = 0;
   
-  // TITRE - Réduit drastiquement sur mobile avec concentration au centre
+  if (titlePoints.length > 0) {
+    let sumY = 0;
+    for (let pt of titlePoints) {
+      sumY += pt.y;
+    }
+    textCenterY = sumY / titlePoints.length;
+  }
+  
+  // TITRE - Réduit drastiquement sur mobile avec concentration au centre du texte
   for (let i = 0; i < perf.particleCount.title; i++) {
     let pt = random(titlePoints);
     if (!pt) continue;
     
-    // Calculer la distance du point au centre (normalisée)
-    let distToCenter = dist(pt.x, pt.y, centerX, centerY);
-    let maxDist = dist(0, 0, width / 2, height / 2);
-    let normalizedDist = distToCenter / maxDist;
+    // Calculer la distance du point au centre du texte (normalisée)
+    let distToCenter = dist(pt.x, pt.y, textCenterX, textCenterY);
+    let maxDist = width * 0.3;
+    let normalizedDist = constrain(distToCenter / maxDist, 0, 1);
     
-    // Probabilité de garder la particule basée sur la distance au centre
-    // Plus c'est loin du centre, moins il y a de particules
-    // Probabilités augmentées pour plus de densité
     let keepProbability = map(normalizedDist, 0, 1, 1, 0.4);
     
     if (random() > keepProbability) {
-      continue; // Skip cette particule
+      continue;
     }
     
     // Dispersion initiale plus grande au centre, plus petite aux bords
@@ -413,39 +505,10 @@ function createParticles() {
       maxSpeed: 3,
       maxForce: 0.3,
       type: 'title',
-      distToCenter: normalizedDist // Stocker pour utilisation future
-    });
-  }
-  
-  // SOUS-TITRE (plus stable) avec même logique
-  for (let i = 0; i < perf.particleCount.subtitle; i++) {
-    let pt = random(subtitlePoints);
-    if (!pt) continue;
-    
-    let distToCenter = dist(pt.x, pt.y, centerX, centerY);
-    let maxDist = dist(0, 0, width / 2, height / 2);
-    let normalizedDist = distToCenter / maxDist;
-    
-    let keepProbability = map(normalizedDist, 0, 1, 1, 0.5);
-    
-    if (random() > keepProbability) {
-      continue;
-    }
-    
-    let dispersionAmount = map(normalizedDist, 0, 1, 40, 15);
-    
-    particles.push({
-      pos: pt.copy().add(
-        randomGaussian() * dispersionAmount,
-        randomGaussian() * dispersionAmount
-      ),
-      vel: createVector(),
-      acc: createVector(),
-      target: pt.copy(),
-      maxSpeed: 2,
-      maxForce: 0.6,
-      type: 'subtitle',
-      distToCenter: normalizedDist
+      distToCenter: normalizedDist,
+      isDispersed: false, // État de dispersion
+      dispersionLevel: 0, // Niveau de dispersion (0-1)
+      floatOffset: random(1000) // Offset pour le mouvement de flottement
     });
   }
   
@@ -479,72 +542,120 @@ function updateParticles() {
   noStroke();
   
   for (let part of particles) {
-    // Skip particles hors écran (avec marge)
-    if (part.pos.x < -100 || part.pos.x > width + 100 || 
-        part.pos.y < -100 || part.pos.y > height + 100) {
-      continue;
-    }
+    // NE PLUS SKIP les particules hors écran - elles restent dispersées
     
-    // Force d'attraction vers la cible (steering behavior)
+    // Calculer la distance à la cible
     let toTarget = p5.Vector.sub(part.target, part.pos);
     let d = toTarget.mag();
-    let dispersion = scrollForce * scrollForce;
     
-    // facteur de retour (scroll up)
-    let returnBoost = map(scrollForce, 0, 1.5, 2.5, 1, true);
-    
-    toTarget.normalize();
-    
-    // Ralentir en approchant de la cible
-    if (d < 100) {
-      let m = map(d, 0, 100, 0, part.maxSpeed);
-      toTarget.mult(m);
-    } else {
-      toTarget.mult(part.maxSpeed * returnBoost * (1 - dispersion));
+    // GESTION DU NIVEAU DE DISPERSION (progressif)
+    // Scroll down = augmente dispersion, Scroll up = diminue dispersion
+    if (scrollForce > 0.2) {
+      // Scroll DOWN : dispersion progressive
+      part.dispersionLevel = min(1, part.dispersionLevel + 0.05);
+      part.isDispersed = part.dispersionLevel > 0.3;
+    } else if (scrollForce < 0.05) {
+      // Scroll UP ou arrêt : retour progressif
+      part.dispersionLevel = max(0, part.dispersionLevel - 0.02);
+      part.isDispersed = part.dispersionLevel > 0.3;
     }
     
-    let steer = p5.Vector.sub(toTarget, part.vel);
-    steer.limit(part.maxForce * returnBoost);
-    part.acc.add(steer);
+    // FORCES selon le niveau de dispersion
+    let dispersedWeight = part.dispersionLevel;
+    let assembledWeight = 1 - part.dispersionLevel;
     
-    // Ajouter l'influence du flow field
-    let x = floor(part.pos.x / scale);
-    let y = floor(part.pos.y / scale);
-    let index = constrain(x + y * cols, 0, flowField.length - 1);
-    
-    if (flowField[index]) {
-      let force = flowField[index].copy();
-      force.mult(0.3);
-      part.acc.add(force);
-    }
-    
-    if (scrollForce > 0) {
+    // === FORCES DE DISPERSION (actives quand dispersé) ===
+    if (scrollForce > 0.2) {
+      // Force explosive au scroll
       let angle = noise(
         part.pos.x * 0.01,
         part.pos.y * 0.01,
-        zoff
+        zoff + part.floatOffset
       ) * TWO_PI * 2;
       
       let disperse = p5.Vector.fromAngle(angle);
-      disperse.mult(scrollForce * 0.8);
-      
+      disperse.mult(scrollForce * 1.2 * dispersedWeight);
       part.acc.add(disperse);
+    }
+    
+    // === FORCES DE FLOTTEMENT (actives quand dispersé et scroll faible) ===
+    if (part.dispersionLevel > 0.1) {
+      // Flow field pour le flottement organique
+      let x = floor(part.pos.x / scale);
+      let y = floor(part.pos.y / scale);
+      let index = constrain(x + y * cols, 0, flowField.length - 1);
+      
+      if (flowField[index]) {
+        let force = flowField[index].copy();
+        force.mult(0.5 * dispersedWeight); // Proportionnel au niveau de dispersion
+        part.acc.add(force);
+      }
+      
+      // Mouvement brownien (flottement aléatoire)
+      let brownian = createVector(
+        (noise(part.pos.x * 0.005 + part.floatOffset, zoff) - 0.5) * 0.6,
+        (noise(part.pos.y * 0.005 + part.floatOffset, zoff + 100) - 0.5) * 0.6
+      );
+      brownian.mult(dispersedWeight);
+      part.acc.add(brownian);
+      
+      // Légère attraction vers le centre horizontal
+      let distFromCenter = abs(part.pos.x - width / 2);
+      if (distFromCenter > width * 0.45) {
+        let toCenter = createVector(width / 2 - part.pos.x, 0);
+        toCenter.normalize();
+        toCenter.mult(0.1 * dispersedWeight);
+        part.acc.add(toCenter);
+      }
+    }
+    
+    // === FORCES DE RETOUR (actives quand assemblé ou en réassemblage) ===
+    if (assembledWeight > 0.1) {
+      toTarget.normalize();
+      
+      // Ralentir en approchant de la cible
+      if (d < 100) {
+        let m = map(d, 0, 100, 0, part.maxSpeed);
+        toTarget.mult(m);
+      } else {
+        toTarget.mult(part.maxSpeed);
+      }
+      
+      let steer = p5.Vector.sub(toTarget, part.vel);
+      steer.limit(part.maxForce);
+      steer.mult(assembledWeight * 2); // Force de retour proportionnelle
+      part.acc.add(steer);
+      
+      // Flow field subtil en mode assemblé
+      let x = floor(part.pos.x / scale);
+      let y = floor(part.pos.y / scale);
+      let index = constrain(x + y * cols, 0, flowField.length - 1);
+      
+      if (flowField[index]) {
+        let force = flowField[index].copy();
+        force.mult(0.3 * assembledWeight);
+        part.acc.add(force);
+      }
+      
+      // Contrainte de distance maximale en mode assemblé
+      let maxDist = part.type === 'title' ? 240 : 140;
+      let offset = p5.Vector.sub(part.pos, part.target);
+      
+      if (offset.mag() > maxDist && assembledWeight > 0.5) {
+        offset.setMag(maxDist);
+        part.pos = p5.Vector.add(part.target, offset);
+        part.vel.mult(0.4);
+      }
     }
     
     // Appliquer la physique
     part.vel.add(part.acc);
-    part.vel.limit(part.maxSpeed);
+    
+    // Vitesse maximale selon le mode (blend entre les deux)
+    let maxVel = lerp(part.maxSpeed, 2, dispersedWeight);
+    part.vel.limit(maxVel);
+    
     part.pos.add(part.vel);
-    
-    let maxDist = part.type === 'title' ? 240 : 140;
-    let offset = p5.Vector.sub(part.pos, part.target);
-    
-    if (offset.mag() > maxDist) {
-      offset.setMag(maxDist);
-      part.pos = p5.Vector.add(part.target, offset);
-      part.vel.mult(0.4); // casser l'inertie
-    }
-    
     part.acc.mult(0);
     
     // Dessiner la particule
@@ -559,17 +670,43 @@ function drawParticle(part, distance) {
   const sizeMultiplier = perf.isLowEnd ? 0.6 : 1;
   
   if (part.type === 'title') {
-    alpha = map(distance, 0, 120, 200, 80);
-    size = map(distance, 0, 120, 2.2, 1) * sizeMultiplier;
+    if (part.dispersionLevel > 0.5) {
+      // Mode dispersé : apparence flottante
+      alpha = lerp(
+        map(distance, 0, 120, 200, 80),
+        150,
+        part.dispersionLevel
+      );
+      size = lerp(
+        map(distance, 0, 120, 2.2, 1),
+        1.8,
+        part.dispersionLevel
+      ) * sizeMultiplier;
+    } else {
+      // Mode assemblé
+      alpha = map(distance, 0, 120, 200, 80);
+      size = map(distance, 0, 120, 2.2, 1) * sizeMultiplier;
+    }
   } else {
-    // SOUS-TITRE = lisibilité
-    alpha = map(distance, 0, 80, 220, 140);
-    size = map(distance, 0, 80, 1.6, 1.2) * sizeMultiplier;
+    if (part.dispersionLevel > 0.5) {
+      alpha = lerp(
+        map(distance, 0, 80, 220, 140),
+        180,
+        part.dispersionLevel
+      );
+      size = lerp(
+        map(distance, 0, 80, 1.6, 1.2),
+        1.4,
+        part.dispersionLevel
+      ) * sizeMultiplier;
+    } else {
+      alpha = map(distance, 0, 80, 220, 140);
+      size = map(distance, 0, 80, 1.6, 1.2) * sizeMultiplier;
+    }
   }
   
-  // Réduire l'alpha pour les particules loin du centre
-  // Plus c'est loin, plus c'est transparent (fade plus doux)
-  if (part.distToCenter) {
+  // Réduire l'alpha pour les particules loin du centre (sauf si dispersé)
+  if (part.distToCenter && part.dispersionLevel < 0.5) {
     let centerFade = map(part.distToCenter, 0, 1, 1, 0.5);
     alpha *= centerFade;
   }
