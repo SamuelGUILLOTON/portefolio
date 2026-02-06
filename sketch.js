@@ -420,15 +420,15 @@ function extractTextPoints() {
   const subtitleSize = min(width * 0.035, 40);
   
   // Position en haut du canvas avec marge
-  const topMargin = titleSize * 0.6; // Marge depuis le haut
+  const topMargin = titleSize * 1; // Marge depuis le haut
   
   // Layout différent selon mobile/desktop
   if (!isMobile || !width < 768) {
-    const spacing = titleSize * 0.6;
+    const spacing =  0;
     
     pg.textSize(titleSize);
-    pg.text('LIMINAL', width / 2, topMargin * 0.3);
-    pg.text('JOY', width / 2, topMargin + spacing);
+    pg.text('LIMINAL', width / 2, topMargin * 0.5);
+    pg.text('JOY', width / 2 + 1, topMargin + spacing);
   } else {
     // DESKTOP : LIMINAL JOY sur une ligne en haut
     pg.textSize(titleSize);
