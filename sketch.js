@@ -423,16 +423,18 @@ function extractTextPoints() {
   const topMargin = titleSize * 1; // Marge depuis le haut
   
   // Layout différent selon mobile/desktop
-  if (!isMobile || !width < 768) {
+  if (isMobile || width < 768) {
+    const spacing =  0;
+    
+    pg.textSize(min(titleSize * 0.5));
+    pg.text('LIMINAL', width / 2, topMargin * 0.5);
+    pg.text('JOY', width / 2 + 1, topMargin + spacing);
+  } else {
     const spacing =  0;
     
     pg.textSize(titleSize);
     pg.text('LIMINAL', width / 2, topMargin * 0.5);
     pg.text('JOY', width / 2 + 1, topMargin + spacing);
-  } else {
-    // DESKTOP : LIMINAL JOY sur une ligne en haut
-    pg.textSize(titleSize);
-    pg.text('LIMINAL JOY', width / 2, topMargin);
   }
   
   pg.loadPixels();
