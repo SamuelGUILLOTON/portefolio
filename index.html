@@ -29,11 +29,7 @@
         .item {
           display: grid;
           gap: clamp(12px, 2vw, 24px);
-          padding: clamp(16px, 4vw, 80px);
-          width: min(1800px, 100%);
           grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
-          max-width: calc(3 * 522px);
-          margin: auto;
         }
 
       .image-box {
@@ -115,6 +111,9 @@
       width: min(1800px, 100%);
       margin: auto;
       max-width: calc(3 * 522px);
+      z-index: 99999;
+      position: relative;
+      opacity: 0.6;
     }
 
     a {
@@ -123,12 +122,17 @@
 
 
     #gridContainer {
-        /* AJOUTEZ CES LIGNES */
-        margin-top: 50px;
-        
         -webkit-overflow-scrolling: touch;
         touch-action: pan-y; /* Autorise le scroll vertical */
     }
+
+    .main {
+      max-width: calc(3 * 522px);
+      margin: 60px auto 0 auto;
+      padding: clamp(16px, 4vw, 80px);
+      width: min(1800px, 100%);
+    }
+
 
     .image-box.is-center .info {
       opacity: 1;
@@ -136,7 +140,6 @@
     }
 
     .image-box.is-center {
-      /* optionnel : léger focus */
       filter: brightness(1.05);
     }
     
@@ -272,12 +275,10 @@
   font-size: 12px;
   font-weight: 500;
   z-index: 9999;
-  position: relative;
   font-family: sans-serif;
   opacity: 0.5;
-  width: 75%;
-  margin: 0 auto;
-  top: 150px;
+  position: relative;
+  top: 30px;
 }
 
 #word {
@@ -288,8 +289,6 @@
   position: relative;
   display: inline-block;
 }
-
-
 
 #word::after {
   content: '|';
@@ -312,11 +311,16 @@
   
   <main id="app"></main>
   <div>
-    <h4 class="typo">
-      C:\Users\liminaljoy> <span id="word"></span>
-    </h1>
-    <div class="item" id="gridContainer"></div>
-  
+   
+    <div class="main">
+
+      <h4 class="typo">
+        C:\Users\liminaljoy> <span id="word"></span>
+      </h4>
+      <div class="item" id="gridContainer"></div>
+
+    </div>
+
     <div id="videoModal" style="
       display: none;
       position: fixed;

@@ -1,7 +1,6 @@
 const words = [
   "Graphic Designer",
   "Editor",
-  "Director",
   "Art Director",
   "Cinematographer"
 ];
