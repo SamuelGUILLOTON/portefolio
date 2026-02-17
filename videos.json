@@ -8,6 +8,14 @@
     "timecode": "so_185"
   },
   {
+    "id": "06",
+    "public_id": "Sans_Projection",
+    "title": "Sans Projection",
+    "artist": "Laiv",
+    "role": "CADRE REAL EDIT",
+    "timecode": "so_35"
+  },
+  {
     "id": "01",
     "public_id": "Flash",
     "title": "Flash",
@@ -70,13 +78,5 @@
     "artist": "Les vents contraire",
     "role": "CADRE REAL EDIT",
     "timecode": "so_45"
-  },
-  {
-    "id": "06",
-    "public_id": "Sans_Projection",
-    "title": "Sans Projection",
-    "artist": "Laiv",
-    "role": "CADRE REAL EDIT",
-    "timecode": "so_35"
   }
 ]
