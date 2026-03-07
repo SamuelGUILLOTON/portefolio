@@ -217,7 +217,9 @@ function generateThumbnailsFromCloudinary(videos) {
       <div class="title">
         <strong>${videoData.title}</strong><br>${videoData.artist}
       </div>
-      <div class="role">${videoData.role}</div>
+      <div class="role">
+        <div>${videoData.role}</div>
+      </div>
     `;
     div.appendChild(info);
 
