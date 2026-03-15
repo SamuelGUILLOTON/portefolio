@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>liminal joy</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,6 +16,37 @@
             box-sizing: border-box;
         }
         
+        .special-elite-regular {
+          font-family: "Special Elite", system-ui;
+          font-weight: 400;
+          font-style: normal;
+          height: 25px;
+          position: relative;
+          z-index: 9999;
+          width: 121px;
+          left: 254px;
+          top: 17px;
+          transform: rotate(-7deg);
+          font-size: 22px;
+          opacity: 0.4;
+        }
+
+        .reseau {
+          position: relative;
+          opacity: 0.3;
+          display: flex;
+          top: 22px;
+        }
+
+        .reseau a {
+          margin: 0 4px;
+        }
+
+        .reseau a:hover {
+          opacity: 1;
+        }
+
+
         body {
             background: #0f0f0f;
             color: #e0e8ee;
@@ -164,6 +199,10 @@
           height: 133vw;
           border-radius: 4px;
           touch-action: manipulation;
+      }
+
+      .special-elite-regular {
+        left: 27px;
       }
 
     }
@@ -319,17 +358,35 @@
 </head>
 <body>
   
-  <main id="app"></main>
-  <div>
-   
-    <div class="main">
-  
-      <h4 class="typo">
-       <!-- C:\Users\liminaljoy><span id="word"></span>--> 
-      </h4>
-      <div class="item" id="gridContainer"></div>
+  <div class="right">
+    <div class="special-elite-regular">A FILM BY</div>
+    <main id="app"></main>
+  </div>
 
+    <div>
+      Cadreur
+      Editor
+      Art Director
     </div>
+
+  </div>
+
+  <div>
+        <div class="main">
+            <div class="left">
+    <div class="reseau">
+      <a href="https://wa.me/330644377996" target="_blank">
+        <i class="fa-brands fa-whatsapp"></i>
+      </a>
+      <a href="https://www.instagram.com/_liminal.joy/" target=”_blank”>
+        <i class="fa-brands fa-instagram"></i>
+      </a>
+      <a href="mailto:samuel.guilloton.pro@gmail.com" target="_blank">
+        <i class="fa-solid fa-envelope"></i>
+      </a>
+    </div>
+          <div class="item" id="gridContainer"></div>
+        </div>
 
     <div id="videoModal" style="
       display: none;

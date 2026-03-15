@@ -427,14 +427,14 @@ function extractTextPoints() {
     const spacing =  0;
     
     pg.textSize(min(titleSize * 0.5));
-    pg.text('LIMINAL', width / 2, topMargin * 0.5);
-    pg.text('JOY', width / 2 + 1, topMargin + spacing);
+    pg.text('LIMINAL', width / 2, topMargin * 0.5 + 20);
+    pg.text('JOY', width / 2 + 1, topMargin + spacing + 20);
   } else {
     const spacing =  0;
     
     pg.textSize(titleSize);
-    pg.text('LIMINAL', width / 2, topMargin * 0.5);
-    pg.text('JOY', width / 2 + 1, topMargin + spacing);
+    pg.text('LIMINAL', width / 2, topMargin * 0.5 + 20);
+    pg.text('JOY', width / 2, topMargin + spacing + 20);
   }
   
   pg.loadPixels();
