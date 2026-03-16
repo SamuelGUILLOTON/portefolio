@@ -24,8 +24,8 @@
           position: relative;
           z-index: 9999;
           width: 121px;
-          left: 254px;
-          top: 17px;
+          left: 410px;
+          top: -4px;
           transform: rotate(-7deg);
           font-size: 22px;
           opacity: 0.4;
@@ -103,6 +103,16 @@
         text-align: right;
       }
 
+      .right {
+        max-width: calc(3 * 522px);
+        margin: 60px auto 0 auto;
+        width: min(1800px, 100%);
+      }
+
+      i::before:hover {
+        opacity: 1;
+      }
+
       .image-box.visible {
           opacity: 1;
           transform: translateY(0); /* revient à sa position normale */
@@ -165,6 +175,7 @@
       z-index: 99999;
       position: relative;
       opacity: 0.6;
+      padding-left: 0;
     }
 
     a {
@@ -360,14 +371,9 @@
   
   <div class="right">
     <div class="special-elite-regular">A FILM BY</div>
-    <main id="app"></main>
+    <main id="app"> </main>
   </div>
 
-    <div>
-      Cadreur
-      Editor
-      Art Director
-    </div>
 
   </div>
 
@@ -430,9 +436,9 @@
 
 <footer>
 <div>
-  <p>  <a href="mailto:liminal.joy@gmail.com" target=”_blank”> liminal.joy@gmail.com </a></p>
+  <!-- <p>  <a href="mailto:liminal.joy@gmail.com" target=”_blank”> liminal.joy@gmail.com </a></p> -->
 
-  <p> <a href="https://www.instagram.com/_liminal.joy/" target=”_blank”> @_liminal.joy </a> </p>
+  <!-- <p> <a href="https://www.instagram.com/_liminal.joy/" target=”_blank”> @_liminal.joy </a> </p> -->
 
   <p style="cursor:pointer;">legal notice</p>
 </div>
