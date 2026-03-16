@@ -33,7 +33,6 @@
 
         .reseau {
           position: relative;
-          opacity: 0.3;
           display: flex;
           top: 22px;
         }
@@ -109,7 +108,11 @@
         width: min(1800px, 100%);
       }
 
-      i::before:hover {
+      i {
+        opacity: 0.4;
+      }
+
+      i:hover {
         opacity: 1;
       }
 
@@ -126,6 +129,7 @@
         bottom: 0;
         width: 100%;
         padding: 14px 12px;
+        opacity: 0.5;
 
         background: linear-gradient(
         to top,
@@ -154,7 +158,7 @@
 
 
       .image-box:hover .info,  .image-box:hover .role{
-      opacity: 1;
+      opacity: 0.8;
       transform: translateY(0);
     }
 
