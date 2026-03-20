@@ -34,25 +34,6 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
 /* =========================
-   MODAL VIDEO
-========================= */
-
-closeBtn.addEventListener('click', closeModal);
-
-modal.addEventListener('click', e => {
-  if (e.target === modal) closeModal();
-});
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModal();
-});
-
-function closeModal() {
-  iframe.src = "";
-  modal.style.display = "none";
-}
-
-/* =========================
    VIDEO HELPERS (iOS)
 ========================= */
 
@@ -200,7 +181,12 @@ function generateThumbnailsFromCloudinary(videos) {
     video.loop = true;
     video.playsInline = true;
     video.preload = 'none';
-    
+
+    /* VIDEO MODAL */
+    const titleVideo = document.getElementById("titleVideo");
+    const artisteVideo = document.getElementById("artiste");
+    const role = document.getElementById("role");
+
     // Attributs supplémentaires pour iOS
     if (isIOS) {
       video.setAttribute('webkit-playsinline', 'true');
@@ -312,6 +298,10 @@ function generateThumbnailsFromCloudinary(videos) {
     div.addEventListener('click', () => {
       // Ouvrir le modal avec la vidéo complète
       iframe.src = cloudinaryFull(videoData.public_id);
+      role.innerHTML += "<p>" + videoData.role + "</p>";
+      artisteVideo.innerHTML += "<p>" + videoData.artist + "</p>";
+      titleVideo.innerHTML += "<p>" + videoData.title + "</p>";
+
       modal.style.display = "flex";
       
       // Nettoyer la preview si elle tourne
@@ -323,6 +313,29 @@ function generateThumbnailsFromCloudinary(videos) {
     });
 
     
+/* =========================
+   MODAL VIDEO
+========================= */
+
+closeBtn.addEventListener('click', closeModal);
+
+modal.addEventListener('click', e => {
+  if (e.target === modal) closeModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+function closeModal() {
+  iframe.src = "";
+  role.innerHTML = "";
+  artisteVideo.innerHTML = "";
+  titleVideo.innerHTML = "";
+  modal.style.display = "none";
+}
+
+
     // Sur iOS, précharger les métadonnées au scroll
     if (isIOS) {
       const loadObserver = new IntersectionObserver(entries => {

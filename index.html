@@ -31,6 +31,12 @@
           opacity: 0.4;
         }
 
+        .modal-main {
+          width: 80%;
+          position: relative;
+          max-width: 900px;
+        }
+
         .reseau {
           position: relative;
           display: flex;
@@ -41,30 +47,30 @@
           margin: 0 4px;
         }
 
-        .reseau a:hover {
-          opacity: 1;
-        }
+      .reseau a:hover {
+        opacity: 1;
+      }
 
+      body {
+          background: #0f0f0f;
+          color: #e0e8ee;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-y: contain;
+      }
 
-        body {
-            background: #0f0f0f;
-            color: #e0e8ee;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain;
-        }
-        #app {
-          position: fixed;
+      #app {
+        position: fixed;
         inset: 0;
         z-index: 0;
         height: 100%;
         pointer-events: none;
       }
 
-        .item {
-          display: grid;
-          gap: clamp(12px, 2vw, 24px);
-          grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
-        }
+      .item {
+        display: grid;
+        gap: clamp(12px, 2vw, 24px);
+        grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
+      }
 
       .image-box {
         width: 100%;
@@ -84,6 +90,10 @@
       .blur {
         filter: blur(4px);
          transition: filter 0.3s ease-in-out;
+      }
+      
+      #role {
+        font-size: 10px;
       }
 
       .role {
@@ -110,6 +120,7 @@
 
       i {
         opacity: 0.4;
+        transition: opacity 0.5s ease-in-out;
       }
 
       i:hover {
@@ -158,9 +169,9 @@
 
 
       .image-box:hover .info,  .image-box:hover .role{
-      opacity: 0.8;
-      transform: translateY(0);
-    }
+        opacity: 0.8;
+        transform: translateY(0);
+      }
 
 
     .list {
@@ -188,8 +199,8 @@
 
 
     #gridContainer {
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-y; /* Autorise le scroll vertical */
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y; /* Autorise le scroll vertical */
     }
 
     .main {
@@ -218,6 +229,15 @@
 
       .special-elite-regular {
         left: 27px;
+        top: -39px;
+      }
+
+      .modal-main {
+        width: 100%;
+      }
+
+      .video-info-modal {
+        margin: 30px 10px;
       }
 
     }
@@ -299,6 +319,25 @@
   background: transparent;
 }
 
+.text {
+ font-family: sans-serif;
+ opacity: 0.8;
+ margin: 10px 0 ;
+}
+
+.video-info-modal {
+  margin-top: 30px;
+}
+
+#titleVideo {
+  font-size: 15px;
+  font-weight: 900;
+  margin-bottom: 5px;
+}
+
+#artiste {
+  margin-top: 1px;
+}
 /*
 .image-box iframe.preview {
   position: absolute;
@@ -382,8 +421,8 @@
   </div>
 
   <div>
-        <div class="main">
-            <div class="left">
+    <div class="main">
+    <div class="left">
     <div class="reseau">
       <a href="https://wa.me/330644377996" target="_blank">
         <i class="fa-brands fa-whatsapp"></i>
@@ -395,8 +434,8 @@
         <i class="fa-solid fa-envelope"></i>
       </a>
     </div>
-          <div class="item" id="gridContainer"></div>
-        </div>
+      <div class="item" id="gridContainer"></div>
+    </div>
 
     <div id="videoModal" style="
       display: none;
@@ -407,7 +446,7 @@
       align-items: center;
       z-index: 9999;
     ">
-    <div style="position: relative; width: 80%; max-width: 900px;">
+    <div class="modal-main">
       <!--
         <iframe id="youtubeVideo" width="100%" height="500" 
             src="" 
@@ -416,6 +455,7 @@
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
             allowfullscreen>
         </iframe>-->
+
         <video
           id="youtubeVideo"
           controls
@@ -425,15 +465,25 @@
         ></video>
         <button id="closeModal" style="
             position: absolute;
-            top: -30px;
+            top: -40px;
             right: 0;
-            background: red;
-            color: #e0e8ee;
+            background: transparent;
+            color: #ffffff;
+            transform: rotate(-90deg);
+            font-size: 26px;
+            color: white;
+            font-weight: 900;
             border: none;
             padding: 10px 15px;
             cursor: pointer;
-            font-size: 16px;
-        ">X</button>
+            font-size: 29px;
+        "><i class="fa-solid fa-turn-down"></i></button>
+
+        <div class="video-info-modal">
+          <div class="text" id="titleVideo">  </div>
+          <div class="text" id="artiste">   </div>
+          <div class="text" id="role">  </div>
+        </div>
     </div>
   </div>
 
