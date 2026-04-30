@@ -2,7 +2,7 @@
    CLOUDINARY
 ========================= */
 
-const CLOUD_NAME = "dthe9fzpc";
+const CLOUD_NAME = "da3ilmcao";
 
 const cloudinaryPreview = (id) =>
   `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto,f_auto,eo_6/${id}.mp4`;
